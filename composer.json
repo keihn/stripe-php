@@ -1,0 +1,18 @@
+{
+    "name": "keihn/stripe-php",
+    "description": "PHP library for Stripe payment gateway.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Keihn\\Stripe\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Abel",
+            "email": "aotugeme@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
