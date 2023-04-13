@@ -7,16 +7,16 @@ use Keihn\Stripe\Charges;
 class Stripe{
 
     public Charges $charges;
-    private $apikey = '';
+    private $apiKey = '';
 
-    public function __construct(string $apikey = '')
+    public function __construct(string $apiKey = '')
     {
-        $this->apikey = $apikey;
-        $this->charges = new Charges();
+        $this->apiKey = $apiKey;
+        $this->charges = new Charges($this->apiKey);
     }
 
-    public function getAPiKey(){
-        return $this->apikey;
+    public function getapiKey(){
+        return $this->apiKey;
     }
 
 }

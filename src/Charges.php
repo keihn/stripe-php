@@ -2,32 +2,43 @@
 
 namespace Keihn\Stripe;
 
+use Exception;
 use Keihn\Stripe\Http\Request;
 use Keihn\Stripe\Traits\ApiResource;
 
 class Charges
 {
-    public string $endpoint = '/charges';
+    public const CHARGE = "/charges";
+    
+    const GET_CHARGE = "/charges/";
+    public const SAVE_CHARGE = "/charges/{$id}/capture";
     public  $apikey;
+
+    public $headers = [];
 
     public Request $request;
 
     use ApiResource;
-    public function __construct()
+    public function __construct(string $apiKey)
     {
        $this->request = new Request();
-       $this->apikey = $this->securelyRetrieveKeys();
-       die($this->apikey);
+       $this->apikey = $apiKey;
+       $this->headers[] = "Authorization : Bearer {$this->apikey}";
     }
 
     public function make($payload)
     {
-      $headers = ["Authorization : Bearer {$this->apikey}"];
-      $this->request->makeRequest($this->endpoint, $this->request::METHOD_POST, $headers, $payload);  
+      try {
+         return $this->request->makeRequest(Charges::CHARGE, $this->request::METHOD_POST, $this->headers, $payload);
+      } catch (Exception $e) {
+        
+      }  
     }
 
-    public function test(){
-      return $this->apikey;
+    public function getCharge($id)
+    {
+      $url = self::GET_CHARGE . $id
+      return $this->request->makeRequest($url, $this->request::METHOD_POST, $this->headers, $payload);  
     }
 }
 

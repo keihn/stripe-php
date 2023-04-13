@@ -16,9 +16,8 @@ class Request implements HttpClientInterface
     
     public $channel;
     public Response $response;
-    
     public string $method = '';
-    public bool $sslDisabled = true;
+    public static bool $sslDisabled = true;
     public const METHOD_GET = 'get';
     public const METHOD_POST = 'post';
     public array $defaultHeaders = [];
@@ -27,45 +26,17 @@ class Request implements HttpClientInterface
 
     public function __construct()
     {
-        $this->channel = $this->loadChannel();
+        $this->channel = \curl_init();
     }
 
     public function makeRequest($endpoint, $method, $headers = array(), $payload)
     {
+        return $this->run($endpoint, $method, $headers, $payload);
+    } 
+    
+    public function run($endpoint, $method, $headers = array(), $payload){
         $url = $this->base . $endpoint;
-        $response = $this->buildRequest($url, $method, $headers, $payload, $this->channel)->run();
-        return $response;
-    }
-
-
-    public function buildRequest(string $url, string $method, Array $headers = [], Array $payload, $channel)
-    {
-        \curl_setopt($channel, CURLOPT_URL, $url);
-        (empty($headers)) ? $headers = $this::getDefaultHeaders() : $headers = array_merge($this::getDefaultHeaders(), $headers);
-
-        if($this->isPostMethod($method)){
-            \curl_setopt($channel, CURLOPT_POST, true);
-            \curl_setopt($channel, CURLOPT_PUT, true);
-        }
-   
-        \curl_setopt($channel, CURLOPT_POSTFIELDS, $payload);
-        \curl_setopt($channel, CURLOPT_HTTPHEADER, $headers);
-        \curl_setopt($channel, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        \curl_setopt($channel, CURLOPT_RETURNTRANSFER, true);
-
-        if(Request::sslCheckDisbled()){
-            \curl_setopt($channel, CURLOPT_SSL_VERIFYPEER, false);
-        }
-
-        return $this;
-    }
-
-    public function loadChannel()
-    {
-        return \curl_init();
-    }
-
-    public function run(){
+        $this->buildRequest($url, $method, $headers, $payload, $this->channel);
         $res = curl_exec($this->channel);
         \curl_close($this->channel);
         if($res === false){
@@ -74,29 +45,48 @@ class Request implements HttpClientInterface
         return $res; 
     }
 
+    public function buildRequest(string $url, string $method, Array $headers = [], Array $payload, $channel)
+    {
+        \curl_setopt($channel, CURLOPT_URL, $url);
+        (empty($headers)) ? $headers = $this->getDefaultHeaders() : $headers = array_merge($this->getDefaultHeaders(), $headers);
+
+        if($this->isPostMethod($method)){
+            \curl_setopt($channel, CURLOPT_POST, true);
+            \curl_setopt($channel, CURLOPT_PUT, true);
+            \curl_setopt($channel, CURLOPT_POSTFIELDS, $payload);
+        }
+        \curl_setopt($channel, CURLOPT_HTTPHEADER, $headers);
+        \curl_setopt($channel, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        \curl_setopt($channel, CURLOPT_RETURNTRANSFER, true);
+
+        if(Request::sslCheckDisbled()){
+            \curl_setopt($channel, CURLOPT_SSL_VERIFYPEER, false);
+        }
+    }
+
 
     public function setMethod(string $method)
     {
         $this->method = $method;
     }
 
-    protected static function getDefaultHeaders()
+    public function getDefaultHeaders()
     {
-
         $ua = [
             'bindings_version' => '10.12.0',
             'lang' => 'php',
             'lang_version' => \PHP_VERSION,
             'publisher' => 'stripe',
         ];
-
+        
         $userAgentJson = \json_encode($ua);
 
-        return Request::$defaultHeaders = [
+        $headers = $this->defaultHeaders = [
             "X-Stripe-Client-User-Agent : {$userAgentJson}",
             "Accept : */*",
             "Content-Type : application/x-www-form-urlencoded ",
-        ];;
+        ];
+        return $headers;
     }
 
     public static function sslCheckDisbled(): bool
